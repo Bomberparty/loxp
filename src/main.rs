@@ -1,10 +1,10 @@
-use mlua::Lua;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
-use std::fs;
 use clio::*;
+use mlua::Lua;
+use std::fs;
 
-const MANIFEST_FILENAME: &str = "manifest.loxp.lua"; 
+const MANIFEST_FILENAME: &str = "manifest.loxp.lua";
 
 /// Simple mlua test
 #[derive(Parser)]
@@ -12,7 +12,7 @@ const MANIFEST_FILENAME: &str = "manifest.loxp.lua";
 struct Cli {
     /// Override current working directory
     #[arg(long)]
-    workdir: Option<ClioPath>,
+    workspace: Option<ClioPath>,
     /// Function name to run in the manifest
     function: Option<String>,
 }
@@ -20,21 +20,29 @@ struct Cli {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let workdir = match cli.workdir {
+    let workspace = match cli.workspace {
         Some(mut dir) => dir.join(MANIFEST_FILENAME),
-        None => ClioPath::new(MANIFEST_FILENAME)?
+        None => ClioPath::new(MANIFEST_FILENAME)?,
     };
 
     let lua = Lua::new();
 
     match cli.function {
         Option::Some(func_name) => {
-            lua.load(fs::read_to_string(workdir.path())?).exec()?;
+            lua.load(
+                fs::read_to_string(workspace.path())
+                    .context(format!("Couldn't load the {MANIFEST_FILENAME} file"))?,
+            )
+            .exec()?;
             let run_func = lua.globals().get::<mlua::Function>(func_name)?;
             run_func.call::<Option<mlua::Number>>(mlua::Nil)?;
-        },
+        }
         None => {
-            lua.load(fs::read_to_string(workdir.path())?).call::<Option<mlua::Number>>(mlua::Nil)?;
+            lua.load(
+                fs::read_to_string(workspace.path())
+                    .context(format!("Couldn't load the {MANIFEST_FILENAME} file"))?,
+            )
+            .call::<Option<mlua::Number>>(mlua::Nil)?;
         }
     }
 
