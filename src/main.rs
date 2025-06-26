@@ -6,7 +6,7 @@ use std::fs;
 
 const MANIFEST_FILENAME: &str = "manifest.loxp.lua";
 
-/// Simple mlua test
+/// Lua OXidized Packages
 #[derive(Parser)]
 #[command(version, about, long_about=None)]
 struct Cli {
