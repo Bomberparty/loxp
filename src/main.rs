@@ -3,6 +3,7 @@ use clap::Parser;
 use clio::*;
 use mlua::Lua;
 use std::fs;
+use std::env;
 
 const MANIFEST_FILENAME: &str = "manifest.loxp.lua";
 
@@ -27,6 +28,18 @@ fn main() -> Result<()> {
 
     let lua = Lua::new();
 
+    
+    let current_dir = env::current_dir()?
+        .to_string_lossy()
+        .replace('\\', "/");
+
+    lua.load(&format!(
+        r#"
+        package.path = "{}/?.lua;" .. package.path
+        "#,
+        current_dir
+    )).exec()?;
+
     match cli.function {
         Option::Some(func_name) => {
             lua.load(
@@ -42,7 +55,7 @@ fn main() -> Result<()> {
                 fs::read_to_string(workspace.path())
                     .context(format!("Couldn't load the {MANIFEST_FILENAME} file"))?,
             )
-            .call::<Option<mlua::Number>>(mlua::Nil)?;
+            .call::<Option<mlua::Function>>(mlua::Nil)?;
         }
     }
 
