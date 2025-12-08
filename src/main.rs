@@ -28,7 +28,7 @@ fn main() -> Result<()> {
 
     let lua = Lua::new();
 
-    
+
     let current_dir = env::current_dir()?
         .to_string_lossy()
         .replace('\\', "/");
