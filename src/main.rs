@@ -27,20 +27,30 @@ fn main() -> Result<()> {
         "package.path = \"{}/?.lua;\" .. package.path",
         current_dir
     ))
-        .exec()?;
+    .exec()?;
 
-    let lua_code = fs::read_to_string(&cli.filename)
-        .context(format!("Couldn't load the '{}' file", cli.filename))?;
+    let _ = lua
+        .load(
+            fs::read_to_string(&cli.filename)
+                .context(format!("Couldn't load the '{}' file", cli.filename))?,
+        )
+        .exec()?;
+    let loxp_table = lua.globals().get::<mlua::Table>("loxp")?;
 
     match cli.function {
         Some(func_name) => {
-            lua.load(&lua_code).exec()?;
-            let globals = lua.globals();
-            let run_func: mlua::Function = globals.get::<mlua::Function>(func_name)?;
-            run_func.call::<()>(())?;
+            let func: mlua::Function = loxp_table
+                .get(func_name.as_str())
+                .context(format!("Could not load function '{}' from 'loxp' table", func_name))?;
+            func.call::<()>(())
+                .context(format!("Error executing function '{}'", func_name))?;
         }
         None => {
-            lua.load(&lua_code).exec()?;
+            let default_func: mlua::Function = loxp_table
+                .get("default")
+                .context("Could not load the default function from 'loxp' table".to_string())?;
+            default_func.call::<()>(())
+                .context("Error executing the default function".to_string())?;
         }
     }
 
