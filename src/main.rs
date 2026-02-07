@@ -29,31 +29,24 @@ fn main() -> Result<()> {
     let lua = Lua::new();
 
     let current_dir = env::current_dir()?.to_string_lossy().replace('\\', "/");
-
     lua.load(&format!(
-        r#"
-        package.path = "{}/?.lua;" .. package.path
-        "#,
+        "package.path = \"{}/?.lua;\" .. package.path",
         current_dir
     ))
-    .exec()?;
+        .exec()?;
+
+    let lua_code = fs::read_to_string(workspace.path())
+        .context(format!("Couldn't load the {} file", MANIFEST_FILENAME))?;
 
     match cli.function {
-        Option::Some(func_name) => {
-            lua.load(
-                fs::read_to_string(workspace.path())
-                    .context(format!("Couldn't load the {MANIFEST_FILENAME} file"))?,
-            )
-            .exec()?;
-            let run_func = lua.globals().get::<mlua::Function>(func_name)?;
-            run_func.call::<Option<mlua::Number>>(mlua::Nil)?;
+        Some(func_name) => {
+            lua.load(&lua_code).exec()?;
+            let globals = lua.globals();
+            let run_func: mlua::Function = globals.get::<mlua::Function>(func_name)?;
+            run_func.call::<()>(())?;
         }
         None => {
-            lua.load(
-                fs::read_to_string(workspace.path())
-                    .context(format!("Couldn't load the {MANIFEST_FILENAME} file"))?,
-            )
-            .call::<Option<mlua::Function>>(mlua::Nil)?;
+            lua.load(&lua_code).exec()?;
         }
     }
 
