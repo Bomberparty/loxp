@@ -2,10 +2,10 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use clio::*;
 use mlua::Lua;
-use std::fs;
 use std::env;
+use std::fs;
 
-const MANIFEST_FILENAME: &str = "manifest.loxp.lua";
+const MANIFEST_FILENAME: &str = "loxp.lua";
 
 /// Lua OXidized Packages
 #[derive(Parser)]
@@ -28,17 +28,15 @@ fn main() -> Result<()> {
 
     let lua = Lua::new();
 
-
-    let current_dir = env::current_dir()?
-        .to_string_lossy()
-        .replace('\\', "/");
+    let current_dir = env::current_dir()?.to_string_lossy().replace('\\', "/");
 
     lua.load(&format!(
         r#"
         package.path = "{}/?.lua;" .. package.path
         "#,
         current_dir
-    )).exec()?;
+    ))
+    .exec()?;
 
     match cli.function {
         Option::Some(func_name) => {
