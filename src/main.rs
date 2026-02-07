@@ -5,27 +5,22 @@ use mlua::Lua;
 use std::env;
 use std::fs;
 
-const MANIFEST_FILENAME: &str = "loxp.lua";
+const DEFAULT_MANIFEST_FILENAME: &str = "loxp.lua";
 
 /// Lua OXidized Packages
 #[derive(Parser)]
 #[command(version, about, long_about=None)]
 struct Cli {
-    /// Override current working directory
-    #[arg(long)]
-    workspace: Option<ClioPath>,
+    /// Override filename
+    #[arg(long, default_value = DEFAULT_MANIFEST_FILENAME)]
+    filename: String,
     /// Function name to run in the manifest
     function: Option<String>,
 }
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-
-    let workspace = match cli.workspace {
-        Some(mut dir) => dir.join(MANIFEST_FILENAME),
-        None => ClioPath::new(MANIFEST_FILENAME)?,
-    };
-
+    
     let lua = Lua::new();
 
     let current_dir = env::current_dir()?.to_string_lossy().replace('\\', "/");
@@ -35,8 +30,8 @@ fn main() -> Result<()> {
     ))
         .exec()?;
 
-    let lua_code = fs::read_to_string(workspace.path())
-        .context(format!("Couldn't load the {} file", MANIFEST_FILENAME))?;
+    let lua_code = fs::read_to_string(&cli.filename)
+        .context(format!("Couldn't load the '{}' file", cli.filename))?;
 
     match cli.function {
         Some(func_name) => {
