@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use mlua::{Lua, LuaNativeFn};
+use mlua::Lua;
 use std::env;
 use std::fs;
 
@@ -43,7 +43,7 @@ fn main() -> Result<()> {
                 "Could not load function '{}' from 'loxp' table",
                 func_name
             ))?;
-            func.call::<()>(())
+            func.call::<()>(loxp_table)
                 .context(format!("Error executing function '{}'", func_name))?;
         }
         None => {
@@ -51,7 +51,7 @@ fn main() -> Result<()> {
                 .get("default")
                 .context("Could not load the default function from 'loxp' table".to_string())?;
             default_func
-                .call::<()>(())
+                .call::<()>(loxp_table)
                 .context("Error executing the default function".to_string())?;
         }
     }
