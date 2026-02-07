@@ -1,6 +1,5 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use clio::*;
 use mlua::Lua;
 use std::env;
 use std::fs;
@@ -20,7 +19,7 @@ struct Cli {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    
+
     let lua = Lua::new();
 
     let current_dir = env::current_dir()?.to_string_lossy().replace('\\', "/");
