@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use mlua::Lua;
+use mlua::{Lua, LuaNativeFn};
 use std::env;
 use std::fs;
 
@@ -29,19 +29,20 @@ fn main() -> Result<()> {
     ))
     .exec()?;
 
-    let _ = lua
+    let loxp_table: mlua::Table = lua
         .load(
             fs::read_to_string(&cli.filename)
                 .context(format!("Couldn't load the '{}' file", cli.filename))?,
         )
-        .exec()?;
-    let loxp_table = lua.globals().get::<mlua::Table>("loxp")?;
+        .into_function()?
+        .call::<mlua::Table>(())?;
 
     match cli.function {
         Some(func_name) => {
-            let func: mlua::Function = loxp_table
-                .get(func_name.as_str())
-                .context(format!("Could not load function '{}' from 'loxp' table", func_name))?;
+            let func: mlua::Function = loxp_table.get(func_name.as_str()).context(format!(
+                "Could not load function '{}' from 'loxp' table",
+                func_name
+            ))?;
             func.call::<()>(())
                 .context(format!("Error executing function '{}'", func_name))?;
         }
@@ -49,7 +50,8 @@ fn main() -> Result<()> {
             let default_func: mlua::Function = loxp_table
                 .get("default")
                 .context("Could not load the default function from 'loxp' table".to_string())?;
-            default_func.call::<()>(())
+            default_func
+                .call::<()>(())
                 .context("Error executing the default function".to_string())?;
         }
     }
