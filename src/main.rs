@@ -41,8 +41,8 @@ fn main() -> Result<()> {
 
     let current_dir = env::current_dir()?.to_string_lossy().replace('\\', "/");
     lua.load(&format!(
-        "package.path = \"{}/?.lua;\" .. package.path",
-        current_dir
+        "package.path = \"{}/?.lua;{}/?/init.lua;\" .. package.path",
+        current_dir, current_dir
     ))
     .exec()?;
 
