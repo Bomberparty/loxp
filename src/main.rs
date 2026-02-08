@@ -14,6 +14,9 @@ struct Cli {
     /// i.e. ./dir/your_file.lua)
     #[arg(long, default_value = DEFAULT_MANIFEST_FILENAME)]
     filename: String,
+    /// Whether to pass command-line arguments to a second argument of lua function
+    #[arg(long)]
+    args: bool,
     /// Function name to run in the manifest
     function: Option<String>,
 }
@@ -38,24 +41,15 @@ fn main() -> Result<()> {
         .into_function()?
         .call::<mlua::Table>(())?;
 
-    match cli.function {
-        Some(func_name) => {
-            let func: mlua::Function = loxp_table.get(func_name.as_str()).context(format!(
-                "Could not load function '{}' from 'loxp' table",
-                func_name
-            ))?;
-            func.call::<()>(loxp_table)
-                .context(format!("Error executing function '{}'", func_name))?;
-        }
-        None => {
-            let default_func: mlua::Function = loxp_table
-                .get("default")
-                .context("Could not load the default function from 'loxp' table".to_string())?;
-            default_func
-                .call::<()>(loxp_table)
-                .context("Error executing the default function".to_string())?;
-        }
-    }
+    let func_name = cli.function.unwrap_or(String::from("default"));
+
+    let func: mlua::Function = loxp_table.get(func_name.as_str()).context(format!(
+        "Could not load function '{}' from 'loxp' table",
+        func_name
+    ))?;
+
+    func.call::<()>(loxp_table)
+        .context(format!("Error executing function '{}'", func_name))?;
 
     Ok(())
 }
