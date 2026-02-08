@@ -14,7 +14,7 @@ const DEFAULT_MANIFEST_FILENAME: &str = "loxp.lua";
     long_about=None,
     help_template = "\
 {before-help}{about-with-newline}
-{usage-heading} {usage} ...
+{usage-heading} {usage} -- ...
 
 {all-args}{after-help}\
 "
