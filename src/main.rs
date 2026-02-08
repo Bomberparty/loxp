@@ -10,7 +10,8 @@ const DEFAULT_MANIFEST_FILENAME: &str = "loxp.lua";
 #[derive(Parser)]
 #[command(version, about, long_about=None)]
 struct Cli {
-    /// Override filename
+    /// Override filename (might not work on files in directores,
+    /// i.e. ./dir/your_file.lua)
     #[arg(long, default_value = DEFAULT_MANIFEST_FILENAME)]
     filename: String,
     /// Function name to run in the manifest
