@@ -8,7 +8,17 @@ const DEFAULT_MANIFEST_FILENAME: &str = "loxp.lua";
 
 /// Lua OXidized Packages
 #[derive(Parser)]
-#[command(version, about, long_about=None)]
+#[command(
+    version,
+    about,
+    long_about=None,
+    help_template = "\
+{before-help}{about-with-newline}
+{usage-heading} {usage} ...
+
+{all-args}{after-help}\
+"
+)]
 struct Cli {
     /// Override filename (might not work on files in directores,
     /// i.e. ./dir/your_file.lua)
@@ -19,11 +29,13 @@ struct Cli {
     args: bool,
     /// Function name to run in the manifest
     function: Option<String>,
+    #[arg(allow_hyphen_values = true, trailing_var_arg = true, hide = true, num_args = 0..)]
+    rest: Vec<String>,
 }
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-
+__
     let lua = Lua::new();
 
     let current_dir = env::current_dir()?.to_string_lossy().replace('\\', "/");
