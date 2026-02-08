@@ -28,6 +28,7 @@ struct Cli {
     #[arg(long)]
     args: bool,
     /// Function name to run in the manifest
+    #[arg(long)]
     function: Option<String>,
     #[arg(allow_hyphen_values = true, trailing_var_arg = true, hide = true, num_args = 0..)]
     rest: Vec<String>,
@@ -60,8 +61,15 @@ fn main() -> Result<()> {
         func_name
     ))?;
 
-    func.call::<()>(loxp_table)
-        .context(format!("Error executing function '{}'", func_name))?;
+    match cli.args {
+        true => func.call::<()>((
+            loxp_table,
+            lua.create_string(cli.rest.join(" ").as_bytes())
+                .context("Could not convert arguments to a valid lua string"),
+        )),
+        false => func.call::<()>(loxp_table),
+    }
+    .context(format!("Error executing function '{}'", func_name))?;
 
     Ok(())
 }
